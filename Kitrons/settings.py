@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'notifications',
     'story',
     'user',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -109,6 +110,9 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+
+AUTH_USER_MODEL = 'account.CustomUser'
 
 
 # Internationalization
