@@ -1,18 +1,25 @@
 from rest_framework import generics
 from rest_framework.response import Response
-from .models import Ad
+from .models import BaseAd
 from .serializers import *
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 
 class GetAdsView(generics.ListAPIView):
-    queryset = Ad.objects.all()
-    serializer_class = AdSerializer
+    queryset = BaseAd.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        ads = self.get_queryset()
+        serializer = GetAdsResponseSerializer({'data': ads})
+        return Response({
+            'success': True,
+            'data': serializer.data
+        })
 
 
 class GetAdsByIdView(generics.RetrieveAPIView):
-    queryset = Ad.objects.all()
+    queryset = BaseAd.objects.all()
     serializer_class = AdDetailSerializer
 
 
@@ -21,7 +28,7 @@ class GetAdsByCompanyIdView(generics.ListAPIView):
 
     def get_queryset(self):
         company_id = self.kwargs['companyId']
-        return Ad.objects.filter(company_id=company_id)
+        return BaseAd.objects.filter(company_id=company_id)
 
 
 class GetAdsQuestionView(generics.ListAPIView):
@@ -61,7 +68,6 @@ class ApplyAnswerView(generics.CreateAPIView):
             except AdQuestion.DoesNotExist:
                 return Response({"detail": "Question not found."}, status=status.HTTP_404_NOT_FOUND)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class UserAdsHistoryView(generics.ListAPIView):

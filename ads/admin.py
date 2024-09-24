@@ -1,10 +1,10 @@
 from django.contrib import admin
-from .models import Ad, AdQuestion, AdAnswer, UserAdHistory
+from .models import *
 
-@admin.register(Ad)
-class AdAdmin(admin.ModelAdmin):
-    list_display = ('title', 'company', 'category', 'created_at')
-    search_fields = ('title', 'description')
+# @admin.register(BaseAd)
+# class AdAdmin(admin.ModelAdmin):
+#     list_display = ('title', 'company', 'category', 'created_at')
+#     search_fields = ('title', 'description')
 
 
 class AdAnswerInline(admin.TabularInline):
@@ -39,3 +39,21 @@ class AdAnswerAdmin(admin.ModelAdmin):
 class UserAdHistoryAdmin(admin.ModelAdmin):
     list_display = ('user', 'ad', 'action_type', 'timestamp')
     search_fields = ('user__username', 'ad__title')
+
+
+@admin.register(BaseAd)
+class BaseAdAdmin(admin.ModelAdmin):
+    list_display = ('title', 'company', 'created_at')
+    search_fields = ('title', 'description')
+
+
+@admin.register(VideoAd)
+class VideoAdAdmin(admin.ModelAdmin):
+    list_display = ('title', 'company', 'created_at')
+    search_fields = ('title', 'description')
+
+
+@admin.register(PostAd)
+class PostAdAdmin(admin.ModelAdmin):
+    list_display = ('title', 'company', 'created_at')
+    search_fields = ('title', 'post_text')
