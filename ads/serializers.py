@@ -39,7 +39,6 @@ class AdQuestionResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = AdQuestion
         fields = ['id', 'question_text', 'answersCount']  # Убедитесь, что используете правильное имя поля
-
     def get_answersCount(self, obj):
         return obj.answers.count()
 
@@ -47,7 +46,7 @@ class AdQuestionResponseSerializer(serializers.ModelSerializer):
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Company
-        fields = ['id', 'name']
+        fields = '__all__'
 
 
 class BoostSerializer(serializers.Serializer):
@@ -58,7 +57,7 @@ class BoostSerializer(serializers.Serializer):
 
 class AdSerializerWithCompany(serializers.ModelSerializer):
     company = CompanySerializer()
-    boost = BoostSerializer(allow_null=True)  # Указываем, что boost может быть null
+    boost = BoostSerializer(allow_null=True)
 
     class Meta:
         model = BaseAd

@@ -45,15 +45,3 @@ class UserAdHistoryAdmin(admin.ModelAdmin):
 class BaseAdAdmin(admin.ModelAdmin):
     list_display = ('title', 'company', 'created_at')
     search_fields = ('title', 'description')
-
-
-@admin.register(VideoAd)
-class VideoAdAdmin(admin.ModelAdmin):
-    list_display = ('title', 'company', 'created_at')
-    search_fields = ('title', 'description')
-
-
-@admin.register(PostAd)
-class PostAdAdmin(admin.ModelAdmin):
-    list_display = ('title', 'company', 'created_at')
-    search_fields = ('title', 'post_text')

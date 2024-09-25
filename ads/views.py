@@ -20,15 +20,38 @@ class GetAdsView(generics.ListAPIView):
 
 class GetAdsByIdView(generics.RetrieveAPIView):
     queryset = BaseAd.objects.all()
-    serializer_class = AdDetailSerializer
+
+    def get(self, request, *args, **kwargs):
+        ad_id = self.kwargs.get('pk')
+        try:
+            ad = self.get_queryset().get(id=ad_id)
+            serializer = AdSerializerWithCompany(ad)
+            return Response({
+                'success': True,
+                'data': {
+                    'data': [serializer.data]  # Оборачиваем в 'data' для соответствия формату
+                }
+            })
+        except BaseAd.DoesNotExist:
+            return Response({'success': False, 'message': 'Ad not found.'}, status=404)
 
 
 class GetAdsByCompanyIdView(generics.ListAPIView):
-    serializer_class = AdSerializer
+    serializer_class = AdSerializerWithCompany
 
     def get_queryset(self):
-        company_id = self.kwargs['companyId']
+        company_id = self.kwargs.get('companyId')
         return BaseAd.objects.filter(company_id=company_id)
+
+    def get(self, request, *args, **kwargs):
+        ads = self.get_queryset()
+        serializer = AdSerializerWithCompany(ads, many=True)
+        return Response({
+            'success': True,
+            'data': {
+                'data': [serializer.data]
+            }
+        })
 
 
 class GetAdsQuestionView(generics.ListAPIView):

@@ -18,15 +18,16 @@ class BaseAd(models.Model):
     is_boosted = models.BooleanField(default=False)
     boost_end_date = models.DateTimeField(null=True, blank=True)
 
-    @property
+    post_text = models.TextField(null=True, blank=True)
+    video = models.FileField(upload_to='ads/videos/', null=True, blank=True)
 
+    @property
     def boost(self):
         return {
             'isBoost': self.is_boosted,
             'multiplier': 1,
-            'boostEndDate': self.boost_end_date
+            'boostEndDate': self.boost_end_date,
         }
-
 
     def __str__(self):
         return self.title
@@ -34,24 +35,8 @@ class BaseAd(models.Model):
 
 class AdImage(models.Model):
     ad = models.ForeignKey('BaseAd', on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='ads/images/')  # Путь для хранения изображений
+    image = models.ImageField(upload_to='ads/images/')
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Image for {self.ad.title}"
-
-
-class SurveyAd(BaseAd):
-    photo = models.ImageField(upload_to='ads/photos/', null=True, blank=True)
-
-
-class VideoAd(BaseAd):
-    video = models.FileField(upload_to='ads/videos/', null=True, blank=True)
-
-
-class PostAd(BaseAd):
-    post_text = models.TextField(null=True, blank=True)
-    photo = models.ImageField(upload_to='ads/photos/', null=True, blank=True)
 
 
 class AdQuestion(models.Model):
