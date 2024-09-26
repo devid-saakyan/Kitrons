@@ -29,7 +29,7 @@ class GetAdsByIdView(generics.RetrieveAPIView):
             return Response({
                 'success': True,
                 'data': {
-                    'data': [serializer.data]  # Оборачиваем в 'data' для соответствия формату
+                    'data': [serializer.data]
                 }
             })
         except BaseAd.DoesNotExist:
@@ -97,5 +97,4 @@ class UserAdsHistoryView(generics.ListAPIView):
     serializer_class = UserAdHistorySerializer
 
     def get_queryset(self):
-        # Возвращает историю действий для текущего пользователя
         return UserAdHistory.objects.filter(user=self.request.user)

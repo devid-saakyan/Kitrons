@@ -12,7 +12,7 @@ class AdSerializer(serializers.ModelSerializer):
 class AdDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = BaseAd
-        fields = ['id', 'title', 'description', 'company', 'category', 'created_at']
+        fields = '__all__'
 
 
 class UserAdHistorySerializer(serializers.ModelSerializer):
@@ -55,13 +55,23 @@ class BoostSerializer(serializers.Serializer):
     boostEndDate = serializers.DateTimeField(allow_null=True)
 
 
+class AdImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdImage
+        fields = ['image']
+
+
 class AdSerializerWithCompany(serializers.ModelSerializer):
     company = CompanySerializer()
     boost = BoostSerializer(allow_null=True)
+    images = serializers.SerializerMethodField()
 
     class Meta:
         model = BaseAd
-        fields = ['id', 'created_at', 'title', 'ad_type', 'description', 'company', 'boost']
+        fields = '__all__'
+
+    def get_images(self, obj):
+        return AdImageSerializer(obj.images.all(), many=True).data
 
 
 class GetAdsResponseSerializer(serializers.Serializer):

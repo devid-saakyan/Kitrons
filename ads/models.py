@@ -38,6 +38,9 @@ class AdImage(models.Model):
     image = models.ImageField(upload_to='ads/images/')
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"Image for {self.ad.title}"
+
 
 class AdQuestion(models.Model):
     ad = models.ForeignKey('BaseAd', on_delete=models.CASCADE, related_name='questions')

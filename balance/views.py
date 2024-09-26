@@ -1,76 +1,79 @@
-from rest_framework import generics
+from .models import *
+from .serializers import BalanceSerializer
+from django.db.models import Sum
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Balance
-from ads.models import Ad
-from .serializers import BalanceDateRangeSerializer, BalanceActivitySerializer, UserBalanceActivitySerializer
-from django.db.models import Sum, Count
-from datetime import datetime
+from rest_framework.permissions import IsAuthenticated
+from .models import BalanceActivity
+from .serializers import BalanceActivitySerializer
+from django.utils.dateparse import parse_date
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
-class AvailableBalanceView(generics.GenericAPIView):
-    def get(self, request):
-        balances = Balance.objects.filter(user=self.request.user)
-        balance_activities = []
+class GetAvailableBalance(APIView):
+    permission_classes = [IsAuthenticated]
 
-        for balance in balances:
-            activity = {
-                "count": 1,  # У нас одно значение баланса на каждую запись
-                "amount": balance.available_balance,
-                "date": balance.date
-            }
-            balance_activities.append(activity)
-
-        response_data = {"userBalanceActivities": balance_activities}
-        return Response(response_data)
-
-
-class BalanceByDateView(generics.GenericAPIView):
-    serializer_class = BalanceDateRangeSerializer
-
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            date_from = serializer.validated_data['date_from']
-            date_to = serializer.validated_data['date_to']
-            balances = Balance.objects.filter(user=request.user, date__range=[date_from, date_to])
-
-            balance_activities = []
-
-            for balance in balances:
-                activity = {
-                    "count": 1,
-                    "amount": balance.available_balance,
-                    "date": balance.date
-                }
-                balance_activities.append(activity)
-
-            response_data = {"userBalanceActivities": balance_activities}
-            return Response(response_data)
-        return Response(serializer.errors, status=400)
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('Language', openapi.IN_HEADER, description="Language", type=openapi.TYPE_STRING),
+            openapi.Parameter('DeviceToken', openapi.IN_HEADER, description="Device Token", type=openapi.TYPE_STRING),
+            openapi.Parameter('OsType', openapi.IN_HEADER, description="Operating System Type",
+                              type=openapi.TYPE_STRING),
+        ]
+    )
+    def get(self, request, *args, **kwargs):
+        try:
+            balance = Balance.objects.get(user=request.user)
+        except Balance.DoesNotExist:
+            balance = Balance.objects.create(user=request.user, available_balance=0.0)
+        total_activity_amount = BalanceActivity.objects.filter(user=request.user).aggregate(
+            total_amount=Sum('amount')
+        )['total_amount'] or 0.0
+        total_withdrawn = Withdraw.objects.filter(user=request.user).aggregate(
+            total_withdrawn=Sum('amount')
+        )['total_withdrawn'] or 0.0
+        available_balance = total_activity_amount - total_withdrawn
+        balance.available_balance = available_balance
+        balance.save()
+        serializer = BalanceSerializer(balance)
+        return Response(serializer.data)
 
 
-class BalanceByActivityView(generics.GenericAPIView):
-    serializer_class = BalanceActivitySerializer
+class GetBalancesByDate(APIView):
+    permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            date_from = serializer.validated_data['date_from']
-            date_to = serializer.validated_data['date_to']
-            category = serializer.validated_data['category']
-            ads = Ad.objects.filter(category=category)
-            balances = Balance.objects.filter(user=request.user, date__range=[date_from, date_to])
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('Language', openapi.IN_HEADER, description="Language", type=openapi.TYPE_STRING),
+            openapi.Parameter('DeviceToken', openapi.IN_HEADER, description="Device Token", type=openapi.TYPE_STRING),
+            openapi.Parameter('OsType', openapi.IN_HEADER, description="Operating System Type",
+                              type=openapi.TYPE_STRING),
+        ]
+    )
+    def post(self, request, *args, **kwargs):
+        date_from = request.data.get('DateFrom')
+        date_to = request.data.get('DateTo')
+        date_from = parse_date(date_from)
+        date_to = parse_date(date_to)
+        activities = BalanceActivity.objects.filter(user=request.user, date__gte=date_from, date__lte=date_to)
+        serializer = BalanceActivitySerializer(activities, many=True)
+        return Response(serializer.data)
 
-            balance_activities = []
 
-            for balance in balances:
-                activity = {
-                    "count": 1,
-                    "amount": balance.available_balance,
-                    "date": balance.date
-                }
-                balance_activities.append(activity)
+class GetBalancesByActivity(APIView):
+    permission_classes = [IsAuthenticated]
 
-            response_data = {"userBalanceActivities": balance_activities}
-            return Response(response_data)
-        return Response(serializer.errors, status=400)
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('Language', openapi.IN_HEADER, description="Language", type=openapi.TYPE_STRING),
+            openapi.Parameter('DeviceToken', openapi.IN_HEADER, description="Device Token", type=openapi.TYPE_STRING),
+            openapi.Parameter('OsType', openapi.IN_HEADER, description="Operating System Type",
+                              type=openapi.TYPE_STRING),
+        ]
+    )
+    def post(self, request, *args, **kwargs):
+        activity_type = request.data.get('ActivityType')
+        activities = BalanceActivity.objects.filter(user=request.user, activity_type=activity_type)
+        serializer = BalanceActivitySerializer(activities, many=True)
+        return Response(serializer.data)

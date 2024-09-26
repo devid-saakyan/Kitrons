@@ -7,6 +7,11 @@ from .models import *
 #     search_fields = ('title', 'description')
 
 
+class AdImageInline(admin.TabularInline):
+    model = AdImage
+    extra = 1
+
+
 class AdAnswerInline(admin.TabularInline):
     model = AdAnswer
     extra = 3
@@ -43,5 +48,6 @@ class UserAdHistoryAdmin(admin.ModelAdmin):
 
 @admin.register(BaseAd)
 class BaseAdAdmin(admin.ModelAdmin):
+    inlines = [AdImageInline]
     list_display = ('title', 'company', 'created_at')
     search_fields = ('title', 'description')
