@@ -16,6 +16,7 @@ class GetAvailableBalance(APIView):
 
     @swagger_auto_schema(
         manual_parameters=[
+            openapi.Parameter('Authorization', openapi.IN_HEADER, description="JWT Token", type=openapi.TYPE_STRING),
             openapi.Parameter('Language', openapi.IN_HEADER, description="Language", type=openapi.TYPE_STRING),
             openapi.Parameter('DeviceToken', openapi.IN_HEADER, description="Device Token", type=openapi.TYPE_STRING),
             openapi.Parameter('OsType', openapi.IN_HEADER, description="Operating System Type",

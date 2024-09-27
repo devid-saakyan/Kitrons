@@ -7,4 +7,5 @@ urlpatterns = [
     path('VerifyEmail/', VerifyEmailView.as_view(), name='verify_email'),
     path('SendPhoneCode/<str:phone>', SendPhoneCodeView.as_view(), name='send_phone_code'),
     path('SendEmailCode/<str:email>', SendEmailCodeView.as_view(), name='send_email_code'),
+    path('Register/', RegisterView.as_view(), name='Account_Register'),
 ]
