@@ -1,21 +1,39 @@
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics
 from rest_framework.response import Response
 from .models import BaseAd
 from .serializers import *
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
+
+
+class CustomPageNumberPagination(PageNumberPagination):
+    page_size = 10
 
 
 class GetAdsView(generics.ListAPIView):
     queryset = BaseAd.objects.all()
+    serializer_class = GetAdsResponseSerializer
+    pagination_class = CustomPageNumberPagination
 
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('page', openapi.IN_QUERY, description="A page number within the paginated result set.",
+                              type=openapi.TYPE_INTEGER),
+            openapi.Parameter('page_size', openapi.IN_QUERY, description="Number of items per page.",
+                              type=openapi.TYPE_INTEGER),
+        ]
+    )
     def get(self, request, *args, **kwargs):
-        ads = self.get_queryset()
-        serializer = GetAdsResponseSerializer({'data': ads})
-        return Response({
-            'success': True,
-            'data': serializer.data
-        })
+        page = self.paginate_queryset(self.get_queryset())
+        if page is not None:
+            serializer = self.get_serializer({'data': page}, many=False)
+            return self.get_paginated_response(serializer.data)
+        else:
+            serializer = self.get_serializer({'data': self.get_queryset()}, many=False)
+            return Response(serializer.data)
 
 
 class GetAdsByIdView(generics.RetrieveAPIView):
@@ -38,6 +56,7 @@ class GetAdsByIdView(generics.RetrieveAPIView):
 
 class GetAdsByCompanyIdView(generics.ListAPIView):
     serializer_class = AdSerializerWithCompany
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         company_id = self.kwargs.get('companyId')
@@ -46,16 +65,15 @@ class GetAdsByCompanyIdView(generics.ListAPIView):
     def get(self, request, *args, **kwargs):
         ads = self.get_queryset()
         serializer = AdSerializerWithCompany(ads, many=True)
-        return Response({
+        return self.get_paginated_response({
             'success': True,
-            'data': {
-                'data': [serializer.data]
-            }
+            'data': serializer.data
         })
 
 
 class GetAdsQuestionView(generics.ListAPIView):
     serializer_class = AdQuestionResponseSerializer
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         ad_id = self.kwargs['AdId']
@@ -95,6 +113,6 @@ class ApplyAnswerView(generics.CreateAPIView):
 
 class UserAdsHistoryView(generics.ListAPIView):
     serializer_class = UserAdHistorySerializer
-
+    pagination_class = PageNumberPagination
     def get_queryset(self):
         return UserAdHistory.objects.filter(user=self.request.user)

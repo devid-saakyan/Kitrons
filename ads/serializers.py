@@ -76,3 +76,5 @@ class AdSerializerWithCompany(serializers.ModelSerializer):
 
 class GetAdsResponseSerializer(serializers.Serializer):
     data = AdSerializerWithCompany(many=True)
+    #pageCount = serializers.IntegerField()
+    #itemCount = serializers.IntegerField()
