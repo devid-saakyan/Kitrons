@@ -71,7 +71,7 @@ class AdSerializerWithCompany(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_images(self, obj):
-        return AdImageSerializer(obj.images.all(), many=True).data
+        return [image.image.url for image in obj.images.all()]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

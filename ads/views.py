@@ -10,7 +10,17 @@ from rest_framework import status
 
 
 class CustomPageNumberPagination(PageNumberPagination):
-    page_size = 10
+    page_size = 10  # Значение по умолчанию
+
+    def get_page_size(self, request):
+        # Получаем значение `count` из данных запроса
+        page_size = request.data.get('count') or request.query_params.get('count')
+        if page_size:
+            try:
+                return int(page_size)
+            except ValueError:
+                pass
+        return self.page_size
 
     def get_paginated_response(self, data):
         return Response({
@@ -25,32 +35,34 @@ class CustomPageNumberPagination(PageNumberPagination):
 
 
 class GetAdsView(generics.ListAPIView):
-    queryset = BaseAd.objects.all()
-    serializer_class = AdSerializerWithCompany
     pagination_class = CustomPageNumberPagination
+    serializer_class = AdSerializerWithCompany
 
-    # @swagger_auto_schema(
-    #     manual_parameters=[
-    #         openapi.Parameter('page', openapi.IN_QUERY, description="A page number within the paginated result set.",
-    #                           type=openapi.TYPE_INTEGER),
-    #         openapi.Parameter('page_size', openapi.IN_QUERY, description="Number of items per page.",
-    #                           type=openapi.TYPE_INTEGER),
-    #     ]
-    # )
-    # def get(self, request, *args, **kwargs):
-    #     page = self.paginate_queryset(self.get_queryset())
-    #     serializer = self.get_serializer(page, many=True) if page is not None else self.get_serializer(
-    #         self.get_queryset(), many=True)
-    #     response_data = {
-    #         'success': True,
-    #         'data': {
-    #             'data': serializer.data,
-    #             'pageCount': self.paginator.page.paginator.num_pages if page is not None else 1,
-    #             'itemCount': self.paginator.page.paginator.count if page is not None else len(serializer.data),
-    #         },
-    #         'messages': []
-    #     }
-    #     return self.get_paginated_response(response_data) if page is not None else Response(response_data)
+    @swagger_auto_schema(
+        operation_description="Получение списка объявлений с пагинацией",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'page': openapi.Schema(type=openapi.TYPE_INTEGER, description='Номер страницы', default=1),
+                'count': openapi.Schema(type=openapi.TYPE_INTEGER, description='Количество элементов на странице',
+                                        default=10),
+            },
+            required=['page', 'count']
+        ),
+        responses={200: AdSerializerWithCompany(many=True)}
+    )
+    def post(self, request, *args, **kwargs):
+        page_number = request.data.get('page', 1)
+        count = request.data.get('count', 10)
+        paginator = self.pagination_class()
+        paginator.page_size = count
+        queryset = BaseAd.objects.all().order_by('-created_at')
+        result_page = paginator.paginate_queryset(queryset, request)
+        serializer = self.serializer_class(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    def get(self, request, *args, **kwargs):
+        return self.post(request, *args, **kwargs)
 
 
 class GetAdsByIdView(generics.RetrieveAPIView):
