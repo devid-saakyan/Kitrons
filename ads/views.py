@@ -7,13 +7,13 @@ from .serializers import *
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
+from rest_framework.views import APIView
 
 
 class CustomPageNumberPagination(PageNumberPagination):
-    page_size = 10  # Значение по умолчанию
+    page_size = 10
 
     def get_page_size(self, request):
-        # Получаем значение `count` из данных запроса
         page_size = request.data.get('count') or request.query_params.get('count')
         if page_size:
             try:
@@ -34,7 +34,7 @@ class CustomPageNumberPagination(PageNumberPagination):
         })
 
 
-class GetAdsView(generics.ListAPIView):
+class GetAdsView(APIView):
     pagination_class = CustomPageNumberPagination
     serializer_class = AdSerializerWithCompany
 
@@ -61,8 +61,8 @@ class GetAdsView(generics.ListAPIView):
         serializer = self.serializer_class(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-    def get(self, request, *args, **kwargs):
-        return self.post(request, *args, **kwargs)
+    # def get(self, request, *args, **kwargs):
+    #     return self.post(request, *args, **kwargs)
 
 
 class GetAdsByIdView(generics.RetrieveAPIView):
