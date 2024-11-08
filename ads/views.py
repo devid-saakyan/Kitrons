@@ -12,28 +12,45 @@ from rest_framework import status
 class CustomPageNumberPagination(PageNumberPagination):
     page_size = 10
 
+    def get_paginated_response(self, data):
+        return Response({
+            'success': True,
+            'data': {
+                'data': data,
+                'pageCount': self.page.paginator.num_pages,
+                'itemCount': self.page.paginator.count,
+            },
+            'messages': []
+        })
+
 
 class GetAdsView(generics.ListAPIView):
     queryset = BaseAd.objects.all()
-    serializer_class = GetAdsResponseSerializer
+    serializer_class = AdSerializerWithCompany
     pagination_class = CustomPageNumberPagination
 
-    @swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter('page', openapi.IN_QUERY, description="A page number within the paginated result set.",
-                              type=openapi.TYPE_INTEGER),
-            openapi.Parameter('page_size', openapi.IN_QUERY, description="Number of items per page.",
-                              type=openapi.TYPE_INTEGER),
-        ]
-    )
-    def get(self, request, *args, **kwargs):
-        page = self.paginate_queryset(self.get_queryset())
-        if page is not None:
-            serializer = self.get_serializer({'data': page}, many=False)
-            return self.get_paginated_response(serializer.data)
-        else:
-            serializer = self.get_serializer({'data': self.get_queryset()}, many=False)
-            return Response(serializer.data)
+    # @swagger_auto_schema(
+    #     manual_parameters=[
+    #         openapi.Parameter('page', openapi.IN_QUERY, description="A page number within the paginated result set.",
+    #                           type=openapi.TYPE_INTEGER),
+    #         openapi.Parameter('page_size', openapi.IN_QUERY, description="Number of items per page.",
+    #                           type=openapi.TYPE_INTEGER),
+    #     ]
+    # )
+    # def get(self, request, *args, **kwargs):
+    #     page = self.paginate_queryset(self.get_queryset())
+    #     serializer = self.get_serializer(page, many=True) if page is not None else self.get_serializer(
+    #         self.get_queryset(), many=True)
+    #     response_data = {
+    #         'success': True,
+    #         'data': {
+    #             'data': serializer.data,
+    #             'pageCount': self.paginator.page.paginator.num_pages if page is not None else 1,
+    #             'itemCount': self.paginator.page.paginator.count if page is not None else len(serializer.data),
+    #         },
+    #         'messages': []
+    #     }
+    #     return self.get_paginated_response(response_data) if page is not None else Response(response_data)
 
 
 class GetAdsByIdView(generics.RetrieveAPIView):

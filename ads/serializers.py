@@ -73,8 +73,13 @@ class AdSerializerWithCompany(serializers.ModelSerializer):
     def get_images(self, obj):
         return AdImageSerializer(obj.images.all(), many=True).data
 
-
-class GetAdsResponseSerializer(serializers.Serializer):
-    data = AdSerializerWithCompany(many=True)
-    #pageCount = serializers.IntegerField()
-    #itemCount = serializers.IntegerField()
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        ad_type_mapping = {
+            'survey': 1,
+            'video': 2,
+            'post': 3
+        }
+        representation['adsType'] = ad_type_mapping.get(instance.ad_type, None)
+        representation.pop('ad_type', None)
+        return representation
