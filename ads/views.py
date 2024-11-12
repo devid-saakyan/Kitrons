@@ -75,9 +75,7 @@ class GetAdsByIdView(generics.RetrieveAPIView):
             serializer = AdSerializerWithCompany(ad)
             return Response({
                 'success': True,
-                'data': {
-                    'data': [serializer.data]
-                }
+                'data': [serializer.data]
             })
         except BaseAd.DoesNotExist:
             return Response({'success': False, 'message': 'Ad not found.'}, status=404)
